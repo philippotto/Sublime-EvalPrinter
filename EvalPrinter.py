@@ -11,6 +11,7 @@ class CompileCommand(sublime_plugin.TextCommand):
 		showResult(compiledJS)
 
 
+
 class CompileAndRunCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
@@ -20,6 +21,9 @@ class CompileAndRunCommand(sublime_plugin.TextCommand):
 		compiledCode = compile(coffeeStr)
 		output = run()
 		showResult(output)
+
+		return output
+
 
 
 class EnterLiveSession(sublime_plugin.TextCommand):
@@ -46,6 +50,19 @@ class ModifyListener(sublime_plugin.EventListener):
 
 			print("compiledJS", compiledJS)
 
+
+
+class TestEvalPrinterCommand(sublime_plugin.TextCommand):
+
+	def run(self, edit, action, codeStr):
+
+		if action == "compile":
+			output = compile(codeStr)
+		else:
+			compile(codeStr)
+			output = run()
+
+		self.view.run_command("append", {"characters": output.decode("ascii")})
 
 
 def getSelection(view):
@@ -87,14 +104,13 @@ def executeCommand(cmd):
 
 	sp = subprocess.Popen(cmd,
 		startupinfo=startupinfo,
-		shell=True)
-	sp.wait()
-	# ,
+		shell=True,
 	# 	stderr=subprocess.PIPE,
-	# 	stdout=subprocess.PIPE)
+		stdout=subprocess.PIPE)
 
-	# out, err = sp.communicate()
-	# print(out)
+	out, err = sp.communicate()
+	return out
+
 
 
 def compile(coffeeStr):
@@ -102,24 +118,12 @@ def compile(coffeeStr):
 	with open("code.coffee", "wt") as out_file:
 		out_file.write(coffeeStr)
 
-
-	cmd = "coffee -p -b code.coffee > code.js"
-	executeCommand(cmd)
-
-	with open('code.js', 'r') as f:
-		compiledJS = f.read()
+	cmd = "coffee -p -b code.coffee"
+	compiledJS = executeCommand(cmd)
 
 	return compiledJS
 
 
 def run():
 
-	executeCommand("(node -p < code.js) > output.txt")
-
-	with open('output.txt', 'r') as f:
-		output = f.read()
-
-	return output
-
-
-
+	return executeCommand("coffee -p -b code.coffee | node -p")
