@@ -105,10 +105,14 @@ def executeCommand(cmd):
 	sp = subprocess.Popen(cmd,
 		startupinfo=startupinfo,
 		shell=True,
-	# 	stderr=subprocess.PIPE,
+		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE)
 
 	out, err = sp.communicate()
+	if err:
+		# raise Exception("Couldn't execute command " + cmd, err)
+		return err
+
 	return out
 
 
