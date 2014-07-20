@@ -1,5 +1,6 @@
 import sublime, sublime_plugin
 import subprocess
+import os
 
 class CompileCommand(sublime_plugin.TextCommand):
 
@@ -99,8 +100,8 @@ def executeCommand(cmd):
 
 	startupinfo = None
 	if sublime.platform() == "windows":
-	    startupinfo = subprocess.STARTUPINFO()
-	    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+		startupinfo = subprocess.STARTUPINFO()
+		startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
 	sp = subprocess.Popen(cmd,
 		startupinfo=startupinfo,
@@ -116,13 +117,22 @@ def executeCommand(cmd):
 	return out
 
 
+def getCodeFilePath():
+
+	epPath = os.path.join(sublime.packages_path(), "EvalPrinter")
+	fileName = "code.coffee"
+	filePath = os.path.join(epPath, fileName)
+
+	return filePath
 
 def compile(coffeeStr):
 
-	with open("code.coffee", "wt") as out_file:
+	filePath = getCodeFilePath()
+
+	with open(filePath, "wt") as out_file:
 		out_file.write(coffeeStr)
 
-	cmd = "coffee -p -b code.coffee"
+	cmd = 'coffee -p -b "' + filePath + '"'
 	compiledJS = executeCommand(cmd)
 
 	return compiledJS
@@ -130,4 +140,6 @@ def compile(coffeeStr):
 
 def run():
 
-	return executeCommand("coffee -p -b code.coffee | node -p")
+	filePath = getCodeFilePath()
+
+	return executeCommand('coffee -p -b "' + filePath + '" | node -p')
