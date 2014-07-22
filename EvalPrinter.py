@@ -2,28 +2,33 @@ import sublime, sublime_plugin
 import subprocess
 import os
 
-class CompileCommand(sublime_plugin.TextCommand):
+class TranspileCommand(sublime_plugin.TextCommand):
 
-	def run(self, edit):
+	def run(self, edit, entireFile=False):
 
-		coffeeStr = getSelection(self.view)
+		if entireFile:
+			contentRegion = sublime.Region(0, self.view.size())
+			coffeeStr = self.view.substr(contentRegion)
+		else:
+			coffeeStr = getSelection(self.view)
 
-		compiledJS = compile(coffeeStr)
-		showResult(compiledJS)
+		transpiledJS = transpile(coffeeStr)
+		if not transpiledJS:
+			showResult("An unknown error occured while transpiling.")
+		else:
+			showResult(transpiledJS)
 
 
 
-class CompileAndRunCommand(sublime_plugin.TextCommand):
+class TranspileAndRunCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
 		view = self.view
 		coffeeStr = getSelection(view)
-		compiledCode = compile(coffeeStr)
+		transpiledCode = transpile(coffeeStr)
 		output = run()
 		showResult(output)
-
-		return output
 
 
 
@@ -31,8 +36,9 @@ class EnterLiveSession(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
-		toggledValue = not self.view.settings().get("isLiveRunnerSession", False)
-		self.view.settings().set("isLiveRunnerSession", toggledValue)
+		toggledValue = not self.view.settings().get("isEvalPrinterLiveSession", False)
+		self.view.settings().set("isEvalPrinterLiveSession", toggledValue)
+		sublime.status_message("EvalPrinter's Live Session is " + ("on" if toggledValue else "off"))
 
 
 
@@ -40,16 +46,8 @@ class ModifyListener(sublime_plugin.EventListener):
 
 	def on_modified_async(self, view):
 
-		if view.settings().get("isLiveRunnerSession", False):
-			coffeeStr = view.substr(sublime.Region(0, view.size()))
-			compiledJS = compile(coffeeStr)
-
-			if compiledJS:
-				showResult(compiledJS)
-			else:
-				markFaultyCode()
-
-			print("compiledJS", compiledJS)
+		if view.settings().get("isEvalPrinterLiveSession", False):
+			view.run_command("transpile", dict(entireFile = True))
 
 
 
@@ -57,13 +55,14 @@ class TestEvalPrinterCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit, action, codeStr):
 
-		if action == "compile":
-			output = compile(codeStr)
+		if action == "transpile":
+			output = transpile(codeStr)
 		else:
-			compile(codeStr)
+			transpile(codeStr)
 			output = run()
 
-		self.view.run_command("append", {"characters": output.decode("ascii")})
+		self.view.run_command("append", {"characters": output})
+
 
 
 def getSelection(view):
@@ -105,14 +104,16 @@ def executeCommand(cmd):
 
 	sp = subprocess.Popen(cmd,
 		startupinfo=startupinfo,
-		shell=True,
 		stderr=subprocess.PIPE,
-		stdout=subprocess.PIPE)
+		stdout=subprocess.PIPE,
+		shell=True)
 
 	out, err = sp.communicate()
-	if err:
-		# raise Exception("Couldn't execute command " + cmd, err)
-		return err
+	out = out.decode("ascii")
+	err = err.decode("ascii")
+
+	if err or sp.returncode != 0:
+		return out + err.replace("\r", "")
 
 	return out
 
@@ -125,7 +126,8 @@ def getCodeFilePath():
 
 	return filePath
 
-def compile(coffeeStr):
+
+def transpile(coffeeStr):
 
 	filePath = getCodeFilePath()
 
@@ -133,9 +135,9 @@ def compile(coffeeStr):
 		out_file.write(coffeeStr)
 
 	cmd = 'coffee -p -b "' + filePath + '"'
-	compiledJS = executeCommand(cmd)
+	transpiledJS = executeCommand(cmd)
 
-	return compiledJS
+	return transpiledJS
 
 
 def run():

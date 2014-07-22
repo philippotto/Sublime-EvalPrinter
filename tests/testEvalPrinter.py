@@ -20,13 +20,13 @@ class TestMultiEditUtils(TestCase):
 	def testCompile(self):
 
 		codeStr = "do (-> return 2 + 3)"
-		compiledString = "(function() {\n  return 2 + 3;\n})();\n"
-		self.view.run_command("test_eval_printer", dict(action = "compile", codeStr = codeStr))
+		transpiledString = "(function() {\n  return 2 + 3;\n})();\n"
+		self.view.run_command("test_eval_printer", dict(action = "transpile", codeStr = codeStr))
 
 		contentRegion = sublime.Region(0, self.view.size())
 		bufferContent = self.view.substr(contentRegion)
 
-		self.assertEqual(bufferContent, compiledString)
+		self.assertEqual(bufferContent, transpiledString)
 
 
 	def testRun(self):
