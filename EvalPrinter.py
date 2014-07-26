@@ -20,14 +20,24 @@ class TranspileCommand(sublime_plugin.TextCommand):
 
 
 
-class TranspileAndRunCommand(sublime_plugin.TextCommand):
+class RunCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
 		view = self.view
-		coffeeStr = getSelection(view)
-		transpiledCode = transpile(coffeeStr)
-		output = run()
+		codeStr = getSelection(view)
+		syntax = view.settings().get('syntax')
+		output = None
+
+		if "Python" in syntax:
+			output = runPython(codeStr)
+		elif "JavaScript" in syntax:
+			# TODO
+			output = run()
+		elif "CoffeeScript" in syntax:
+			transpiledCode = transpile(codeStr)
+			output = run()
+
 		showResult(output)
 
 
@@ -64,7 +74,6 @@ class TestEvalPrinterCommand(sublime_plugin.TextCommand):
 		self.view.run_command("append", {"characters": output})
 
 
-
 def getSelection(view):
 
 	codeParts = []
@@ -79,6 +88,26 @@ def getSelection(view):
 
 	return "\n".join(codeParts)
 
+
+def runPython(codeStr):
+
+	output = None
+	testStr = ""
+
+	# TODO: hook print function and add it to output
+
+	try:
+		output = str(eval(codeStr))
+	except SyntaxError as e:
+		try:
+			# code has to end with a new line
+			codeStr += "\n"
+			output = str(exec(codeStr))
+		except BaseException as e:
+			print("An exception occured while evaluating python code", e)
+			output = str(e)
+
+	return output
 
 
 def showResult(resultStr):
