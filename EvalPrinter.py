@@ -91,23 +91,9 @@ def getSelection(view):
 
 def runPython(codeStr):
 
-	output = None
-	testStr = ""
+	# TODO: lstrip the minimum amount of whitespace each line has
 
-	# TODO: hook print function and add it to output
-
-	try:
-		output = str(eval(codeStr))
-	except SyntaxError as e:
-		try:
-			# code has to end with a new line
-			codeStr += "\n"
-			output = str(exec(codeStr))
-		except BaseException as e:
-			print("An exception occured while evaluating python code", e)
-			output = str(e)
-
-	return output
+	return executeCommand(["python", "-c", codeStr], False)
 
 
 def showResult(resultStr):
@@ -124,7 +110,7 @@ def markFaultyCode():
 	pass
 
 
-def executeCommand(cmd):
+def executeCommand(cmd, shell=False):
 
 	startupinfo = None
 	if sublime.platform() == "windows":
@@ -135,14 +121,12 @@ def executeCommand(cmd):
 		startupinfo=startupinfo,
 		stderr=subprocess.PIPE,
 		stdout=subprocess.PIPE,
-		shell=True)
+		shell=shell)
 
-	out, err = sp.communicate()
-	out = out.decode("ascii")
-	err = err.decode("ascii")
+	out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
 
 	if err or sp.returncode != 0:
-		return out + err.replace("\r", "")
+		return out + err
 
 	return out
 
