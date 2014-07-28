@@ -2,43 +2,21 @@ import sublime, sublime_plugin
 import subprocess
 import os
 
-class TranspileCommand(sublime_plugin.TextCommand):
+class EvalPrintCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit, entireFile=False):
 
+		view = self.view
+
 		if entireFile:
 			contentRegion = sublime.Region(0, self.view.size())
-			coffeeStr = self.view.substr(contentRegion)
+			codeStr = self.view.substr(contentRegion)
 		else:
-			coffeeStr = getSelection(self.view)
+			codeStr = Helper.getSelection(self.view)
 
-		transpiledJS = transpile(coffeeStr)
-		if not transpiledJS:
-			showResult("An unknown error occured while transpiling.")
-		else:
-			showResult(transpiledJS)
-
-
-
-class RunCommand(sublime_plugin.TextCommand):
-
-	def run(self, edit):
-
-		view = self.view
-		codeStr = getSelection(view)
 		syntax = view.settings().get('syntax')
-		output = None
-
-		if "Python" in syntax:
-			output = runPython(codeStr)
-		elif "JavaScript" in syntax:
-			# TODO
-			output = run()
-		elif "CoffeeScript" in syntax:
-			transpiledCode = transpile(codeStr)
-			output = run()
-
-		showResult(output)
+		output = evalPrint(codeStr, syntax)
+		Helper.showResult(output)
 
 
 
@@ -63,123 +41,160 @@ class ModifyListener(sublime_plugin.EventListener):
 
 class TestEvalPrinterCommand(sublime_plugin.TextCommand):
 
-	def run(self, edit, action, codeStr):
+	def run(self, edit, codeStr, syntax):
 
-		if action == "transpile":
-			output = transpile(codeStr)
-		else:
-			transpile(codeStr)
-			output = run()
-
+		output = EvalEvaluator.evalPrint(codeStr, syntax)
 		self.view.run_command("append", {"characters": output})
 
 
-def getSelection(view):
 
-	codeParts = []
+class EvalEvaluator:
 
-	for region in view.sel():
+	@staticmethod
+	def evalPrint(codeStr, syntax):
 
-		if region.a == region.b:
-			region = view.line(region)
+		output = None
 
-		code = view.substr(region)
-		codeParts.append(code)
+		if "Python" in syntax:
+			output = EvalEvaluator.runPython(codeStr)
+		elif "JavaScript" in syntax:
+			output = EvalEvaluator.runJavaScript(codeStr)
+		elif "CoffeeScript" in syntax:
+			output = EvalEvaluator.runCoffee(codeStr)
 
-	return "\n".join(codeParts)
-
-
-def runPython(codeStr):
-
-	codeStr = unindentCode(codeStr)
-
-	try:
-		output = str(eval(codeStr))
-	except:
-		output = executeCommand(["python", "-c", codeStr], False)
-
-	return output
+		return output
 
 
-def unindentCode(codeStr):
-	# finds the smallest common indentation and removes it,
-	# so that indented code can be evaluated properly
+	@staticmethod
+	def runJavaScript(codeStr):
 
-	indentations = []
-	codeLines = codeStr.split("\n")
-
-	for l in codeLines:
-		if l.lstrip() == "":
-			# ignore empty lines
-			continue
-		indentation = len(l) - len(l.lstrip())
-		indentations.append(indentation)
-
-	unindentLength = min(indentations)
-
-	newCodeLines = [l[unindentLength:] for l in codeLines]
-	return "\n".join(newCodeLines)
+		return Helper.executeCommand(["node", "-p", codeStr], False)
 
 
-def showResult(resultStr):
+	@staticmethod
+	def runCoffee(codeStr):
 
-	myOutput = sublime.active_window().create_output_panel("myOutput")
-	sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
+		# transpileCmd = ['coffee', '-p', '-b', '-e', codeStr]
+		# does not work with multi-line-strings
 
-	myOutput.run_command("append", {"characters": resultStr})
-	myOutput.set_syntax_file("Packages/JavaScript/JavaScript.tmLanguage")
+		transpileCmd = ['coffee', '-p', '-b', Helper.writeToTmp(codeStr)]
 
+		transpiledJS = Helper.executeCommand(transpileCmd)
+		evaluatedJS = Helper.executeCommand(["node", "-p", transpiledJS], False)
 
-def markFaultyCode():
-
-	pass
-
-
-def executeCommand(cmd, shell=True):
-
-	startupinfo = None
-	if sublime.platform() == "windows":
-		startupinfo = subprocess.STARTUPINFO()
-		startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-	sp = subprocess.Popen(cmd,
-		startupinfo=startupinfo,
-		stderr=subprocess.PIPE,
-		stdout=subprocess.PIPE,
-		shell=shell)
-
-	out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
-
-	if err or sp.returncode != 0:
-		return out + err
-
-	return out
+		return Helper.formatTwoOutputs(evaluatedJS, transpiledJS)
 
 
-def getCodeFilePath():
+	@staticmethod
+	def runPython(codeStr):
 
-	epPath = os.path.join(sublime.packages_path(), "EvalPrinter")
-	fileName = "code.coffee"
-	filePath = os.path.join(epPath, fileName)
+		codeStr = Helper.unindentCode(codeStr)
 
-	return filePath
+		try:
+			output = str(eval(codeStr))
+		except:
+			output = Helper.executeCommand(["python", "-c", codeStr], False)
 
-
-def transpile(coffeeStr):
-
-	filePath = getCodeFilePath()
-
-	with open(filePath, "wt") as out_file:
-		out_file.write(coffeeStr)
-
-	cmd = 'coffee -p -b "' + filePath + '"'
-	transpiledJS = executeCommand(cmd)
-
-	return transpiledJS
+		return output
 
 
-def run():
 
-	filePath = getCodeFilePath()
+class Helper:
 
-	return executeCommand('coffee -p -b "' + filePath + '" | node -p')
+	@staticmethod
+	def getSelection(view):
+
+		codeParts = []
+
+		for region in view.sel():
+
+			if region.a == region.b:
+				region = view.line(region)
+
+			code = view.substr(region)
+			codeParts.append(code)
+
+		return "\n".join(codeParts)
+
+
+	@staticmethod
+	def showResult(resultStr):
+
+		myOutput = sublime.active_window().create_output_panel("myOutput")
+		sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
+
+		myOutput.run_command("append", {"characters": resultStr})
+		myOutput.set_syntax_file("Packages/JavaScript/JavaScript.tmLanguage")
+
+
+
+	@staticmethod
+	def executeCommand(cmd, shell=True):
+
+		startupinfo = None
+		if sublime.platform() == "windows":
+			startupinfo = subprocess.STARTUPINFO()
+			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+		sp = subprocess.Popen(cmd,
+			startupinfo=startupinfo,
+			stderr=subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			shell=shell)
+
+		out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
+
+		if err or sp.returncode != 0:
+			return out + err
+
+		return out
+
+
+	@staticmethod
+	def unindentCode(codeStr):
+		# finds the smallest common indentation and removes it,
+		# so that indented code can be evaluated properly
+
+		indentations = []
+		codeLines = codeStr.splitlines()
+
+		for l in codeLines:
+			if l.lstrip() == "":
+				# ignore empty lines
+				continue
+
+			indentation = len(l) - len(l.lstrip())
+			indentations.append(indentation)
+
+		unindentLength = min(indentations)
+
+		newCodeLines = [l[unindentLength:] for l in codeLines]
+		return "\n".join(newCodeLines)
+
+
+
+	@staticmethod
+	def getCodeFilePath():
+
+		epPath = os.path.join(sublime.packages_path(), "EvalPrinter")
+		fileName = "tmp"
+		filePath = os.path.join(epPath, fileName)
+
+		return filePath
+
+
+	@staticmethod
+	def writeToTmp(s):
+
+		filePath = Helper.getCodeFilePath()
+
+		with open(filePath, "wt") as out_file:
+			out_file.write(s)
+
+		return filePath
+
+
+	@staticmethod
+	def formatTwoOutputs(a, b):
+
+		return a + "\n" + "-" * 80 + "\n\n" + b

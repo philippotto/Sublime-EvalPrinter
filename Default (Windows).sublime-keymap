@@ -1,6 +1,4 @@
 [
-  { "keys": ["ctrl+alt+enter"], "command": "transpile" },
-  { "keys": ["shift+alt+enter"], "command": "run" },
-  { "keys": ["ctrl+shift+alt+enter"], "command": "enter_live_session" }
-
+  { "keys": ["shift+alt+enter"], "command": "eval_print" },
+  { "keys": ["ctrl+shift+alt+enter"], "command": "eval_print_enter_live_session" }
 ]

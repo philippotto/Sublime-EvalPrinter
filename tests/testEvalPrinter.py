@@ -17,25 +17,59 @@ class TestMultiEditUtils(TestCase):
 			self.view.window().run_command("close_file")
 
 
-	def testCompile(self):
+	def assertCode(self, codeStr, expectedValue, syntax):
 
-		codeStr = "do (-> return 2 + 3)"
-		transpiledString = "(function() {\n  return 2 + 3;\n})();\n"
-		self.view.run_command("test_eval_printer", dict(action = "transpile", codeStr = codeStr))
+		self.view.run_command("test_eval_printer", dict(codeStr = codeStr, syntax = syntax))
 
 		contentRegion = sublime.Region(0, self.view.size())
 		bufferContent = self.view.substr(contentRegion)
 
-		self.assertEqual(bufferContent, transpiledString)
+		self.assertEqual(bufferContent.strip(), expectedValue)
 
 
-	def testRun(self):
+	def testSingleLinePython(self):
+
+		codeStr = "len('testPython')"
+		expectedValue = "10"
+
+		self.assertCode(codeStr, expectedValue, "Python")
+
+
+	def testMultiLinePython(self):
+
+		codeStr = "arr = []\nfor el in [1, 2, 3, 4]:\n  arr.append(10 * el)\nprint(arr)"
+		expectedValue = "[10, 20, 30, 40]"
+
+		self.assertCode(codeStr, expectedValue, "Python")
+
+
+	def testSingleLineJavaScript(self):
+
+		codeStr = "Math.sqrt(6 + 3)"
+		expectedValue = "3"
+
+		self.assertCode(codeStr, expectedValue, "JavaScript")
+
+
+	def testMultiLineJavaScript(self):
+
+		codeStr = "(function() {\n return 'multiLineTest'\n})()"
+		expectedValue = "multiLineTest"
+
+		self.assertCode(codeStr, expectedValue, "JavaScript")
+
+
+	def testSingleLineCoffeeScript(self):
 
 		codeStr = "do (-> return 2 + 3)"
-		resultString = "5\n"
-		self.view.run_command("test_eval_printer", dict(action = "run", codeStr = codeStr))
+		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n})();"
 
-		contentRegion = sublime.Region(0, self.view.size())
-		bufferContent = self.view.substr(contentRegion)
+		self.assertCode(codeStr, expectedValue, "CoffeeScript")
 
-		self.assertEqual(bufferContent, resultString)
+
+	def testMultiLineCoffeeScript(self):
+
+		codeStr = "do ->\n  return 2 + 3"
+		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n})();"
+
+		self.assertCode(codeStr, expectedValue, "CoffeeScript")
