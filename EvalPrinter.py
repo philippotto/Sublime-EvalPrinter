@@ -42,7 +42,7 @@ class RunCommand(sublime_plugin.TextCommand):
 
 
 
-class EnterLiveSession(sublime_plugin.TextCommand):
+class EnterLiveSessionCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
@@ -135,7 +135,7 @@ def markFaultyCode():
 	pass
 
 
-def executeCommand(cmd, shell=False):
+def executeCommand(cmd, shell=True):
 
 	startupinfo = None
 	if sublime.platform() == "windows":
