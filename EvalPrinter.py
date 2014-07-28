@@ -91,9 +91,34 @@ def getSelection(view):
 
 def runPython(codeStr):
 
-	# TODO: lstrip the minimum amount of whitespace each line has
+	codeStr = unindentCode(codeStr)
 
-	return executeCommand(["python", "-c", codeStr], False)
+	try:
+		output = str(eval(codeStr))
+	except:
+		output = executeCommand(["python", "-c", codeStr], False)
+
+	return output
+
+
+def unindentCode(codeStr):
+	# finds the smallest common indentation and removes it,
+	# so that indented code can be evaluated properly
+
+	indentations = []
+	codeLines = codeStr.split("\n")
+
+	for l in codeLines:
+		if l.lstrip() == "":
+			# ignore empty lines
+			continue
+		indentation = len(l) - len(l.lstrip())
+		indentations.append(indentation)
+
+	unindentLength = min(indentations)
+
+	newCodeLines = [l[unindentLength:] for l in codeLines]
+	return "\n".join(newCodeLines)
 
 
 def showResult(resultStr):
