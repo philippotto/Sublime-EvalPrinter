@@ -74,12 +74,15 @@ class EvalEvaluator:
 	@staticmethod
 	def runCoffee(codeStr):
 
+		# does not work with multi-line-strings:
 		# transpileCmd = ['coffee', '-p', '-b', '-e', codeStr]
-		# does not work with multi-line-strings
 
-		transpileCmd = ['coffee', '-p', '-b', Helper.writeToTmp(codeStr)]
+		# does not work on unix:
+		# transpileCmd = ['coffee', '-p', '-b', Helper.writeToTmp(codeStr)]
 
+		transpileCmd = 'coffee -p -b "' + Helper.writeToTmp(codeStr) + '"'
 		transpiledJS = Helper.executeCommand(transpileCmd)
+
 		evaluatedJS = Helper.executeCommand(["node", "-p", transpiledJS], False)
 
 		return Helper.formatTwoOutputs(evaluatedJS, transpiledJS)
