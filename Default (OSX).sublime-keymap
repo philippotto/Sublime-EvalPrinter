@@ -1,0 +1,4 @@
+[
+  { "keys": ["shift+super+enter"], "command": "eval_print" },
+  { "keys": ["shift+super+alt+enter"], "command": "eval_print_enter_live_session" }
+]
