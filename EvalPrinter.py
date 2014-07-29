@@ -20,7 +20,7 @@ class EvalPrintCommand(sublime_plugin.TextCommand):
 			settings = sublime.load_settings("EvalPrinter.sublime-settings")
 			syntax = settings.get("default_language")
 
-		output = evalPrint(codeStr, syntax)
+		output = EvalEvaluator.evalPrint(codeStr, syntax)
 		Helper.showResult(output)
 
 
