@@ -21,7 +21,7 @@ With EvalPrinter.
 ## Features
 
 You can trigger the ```eval_print``` command to transpile/evaluate the current selection (or the current line if nothing is selected).
-The default keybinding is ```shift+alt+enter```.
+The default keybinding is <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Enter</kbd>.
 By default, the output will yield the result of the last expression.
 Additional output can be achieved via the standard logging methods of the current programming language (e.g. ```console.log``` in JavaScript and ```print``` in Python).
 
@@ -29,7 +29,7 @@ Additional output can be achieved via the standard logging methods of the curren
 
 
 Another possibility is to enter a "live session", in which the code of the active view will be transpiled/evaluated after each keystroke.
-The command is called ```eval_print_enter_live_session``` and the default keybinding is ```ctrl/super+shift+alt+enter```.
+The command is called ```eval_print_enter_live_session``` and the default keybinding is <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Enter</kbd>.
 
 
 ![](http://philippotto.github.io/Sublime-EvalPrinter/screens/javascript-live-session.gif)
