@@ -15,12 +15,17 @@ class EvalPrintCommand(sublime_plugin.TextCommand):
 			codeStr = Helper.getSelection(self.view)
 
 		syntax = view.settings().get('syntax')
+
+		if "Plain text" in syntax:
+			settings = sublime.load_settings("EvalPrinter.sublime-settings")
+			syntax = settings.get("default_language")
+
 		output = evalPrint(codeStr, syntax)
 		Helper.showResult(output)
 
 
 
-class EnterLiveSessionCommand(sublime_plugin.TextCommand):
+class EvalPrintEnterLiveSessionCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
@@ -35,7 +40,7 @@ class ModifyListener(sublime_plugin.EventListener):
 	def on_modified_async(self, view):
 
 		if view.settings().get("isEvalPrinterLiveSession", False):
-			view.run_command("transpile", dict(entireFile = True))
+			view.run_command("eval_print", dict(entireFile = True))
 
 
 
@@ -61,6 +66,8 @@ class EvalEvaluator:
 			output = EvalEvaluator.runJavaScript(codeStr)
 		elif "CoffeeScript" in syntax:
 			output = EvalEvaluator.runCoffee(codeStr)
+		else:
+			output = "Couldn't determine a supported language. Maybe you want to set the default_language setting."
 
 		return output
 
