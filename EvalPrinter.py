@@ -32,7 +32,8 @@ class EvalPrintEnterLiveSessionCommand(sublime_plugin.TextCommand):
 		toggledValue = not self.view.settings().get("isEvalPrinterLiveSession", False)
 		self.view.settings().set("isEvalPrinterLiveSession", toggledValue)
 		sublime.status_message("EvalPrinter's Live Session is " + ("on" if toggledValue else "off"))
-
+		if toggledValue:
+			self.view.run_command("eval_print", dict(entireFile = True))
 
 
 class ModifyListener(sublime_plugin.EventListener):

@@ -1,0 +1,4 @@
+[
+	{ "command": "eval_print", "caption" : "EvalPrinter: Evaluate/Transpile" },
+	{ "command": "eval_print_enter_live_session", "caption" : "EvalPrinter: Enter/Leave Live Session" }
+]
