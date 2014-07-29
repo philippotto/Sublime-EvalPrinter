@@ -32,3 +32,8 @@ Currently, the following languages are supported:
 - Python
 
 Feel free to open issues or submit pull requests to add support for other languages.
+
+
+## Installation
+
+Either use [Package Control](https://sublime.wbond.net/installation) and search for `EvalPrinter` or clone this repository into Sublime Text "Packages" directory.
