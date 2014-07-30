@@ -17,6 +17,10 @@ Don't look this up in the documention!
 Don't open a shell, in which you replicate the code you already wrote! Stay in Sublime and just evaluate/transpile your code.
 With EvalPrinter.
 
+Unlike a REPL, EvalPrinter does not only work with simple expressions but with entire blocks of code. Because you don't have to switch to another program, context switches are reduced und Sublime's usual text editing capabilities can be used, as well.
+
+Additionally, the live session mode provides true immediate feedback which is completely missing in a REPL. The same applies for showing the results of transpilation processes.
+
 
 ## Features
 
