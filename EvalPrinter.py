@@ -71,7 +71,6 @@ class EvalEvaluator:
 			output = EvalEvaluator.runJavaScript(codeStr)
 		elif "CoffeeScript" in syntax:
 			output = EvalEvaluator.runCoffee(codeStr)
-			print("output", output)
 		else:
 			output = "Couldn't determine a supported language. Maybe you want to set the default_language setting."
 
@@ -135,8 +134,6 @@ class Helper:
 
 	@staticmethod
 	def showResult(resultStr):
-
-		print("resultStr", resultStr)
 
 		if int(sublime.version()) < 3000:
 			sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
@@ -224,8 +221,4 @@ class Helper:
 	@staticmethod
 	def formatTwoOutputs(a, b):
 
-		res =  a + "\n" + "-" * 80 + "\n\n" + b
-
-		print(res)
-
-		return res
+		return  a + "\n" + "-" * 80 + "\n\n" + b
