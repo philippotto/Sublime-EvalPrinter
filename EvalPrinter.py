@@ -50,7 +50,11 @@ class TestEvalPrinterCommand(sublime_plugin.TextCommand):
 	def run(self, edit, codeStr, syntax):
 
 		output = EvalEvaluator.evalPrint(codeStr, syntax)
-		self.view.run_command("append", {"characters": output})
+
+		if int(sublime.version()) < 3000:
+			self.view.run_command("insert", {"characters": output})
+		else:
+			self.view.run_command("append", {"characters": output})
 
 
 
