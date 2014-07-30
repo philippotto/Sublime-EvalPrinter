@@ -131,12 +131,18 @@ class Helper:
 	@staticmethod
 	def showResult(resultStr):
 
-		myOutput = sublime.active_window().create_output_panel("myOutput")
-		sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
+		if int(sublime.version()) < 3000:
+			sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
+			myOutput = sublime.active_window().get_output_panel("myOutput")
 
-		myOutput.run_command("append", {"characters": resultStr})
+			myOutput.run_command("insert", {"characters": resultStr})
+		else:
+			myOutput = sublime.active_window().create_output_panel("myOutput")
+			sublime.active_window().run_command("show_panel", {"panel": "output.myOutput"})
+
+			myOutput.run_command("append", {"characters": resultStr})
+
 		myOutput.set_syntax_file("Packages/JavaScript/JavaScript.tmLanguage")
-
 
 
 	@staticmethod
