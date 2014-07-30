@@ -62,7 +62,8 @@ class TestMultiEditUtils(TestCase):
 	def testSingleLineCoffeeScript(self):
 
 		codeStr = "do (-> return 2 + 3)"
-		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n})();"
+		ST2Fix = "  " if int(sublime.version()) < 3000 else ""
+		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n" + ST2Fix + "})();"
 
 		self.assertCode(codeStr, expectedValue, "CoffeeScript")
 
@@ -70,6 +71,7 @@ class TestMultiEditUtils(TestCase):
 	def testMultiLineCoffeeScript(self):
 
 		codeStr = "do ->\n  return 2 + 3"
-		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n})();"
+		ST2Fix = "  " if int(sublime.version()) < 3000 else ""
+		expectedValue = "5\n\n--------------------------------------------------------------------------------\n\n(function() {\n  return 2 + 3;\n" + ST2Fix + "})();"
 
 		self.assertCode(codeStr, expectedValue, "CoffeeScript")
