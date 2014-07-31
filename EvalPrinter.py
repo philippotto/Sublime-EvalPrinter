@@ -1,6 +1,7 @@
 import sublime, sublime_plugin
 import subprocess
 import os
+from sys import platform as _platform
 
 class EvalPrintCommand(sublime_plugin.TextCommand):
 
@@ -160,13 +161,20 @@ class Helper:
 			startupinfo = subprocess.STARTUPINFO()
 			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-		sp = subprocess.Popen(cmd,
-			startupinfo=startupinfo,
-			stderr=subprocess.PIPE,
-			stdout=subprocess.PIPE,
-			shell=shell)
+		try:
+			sp = subprocess.Popen(cmd,
+				startupinfo=startupinfo,
+				stderr=subprocess.PIPE,
+				stdout=subprocess.PIPE,
+				shell=shell,
+				env=os.environ.copy())
 
-		out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
+			out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
+
+		except:
+			if _platform == "darwin":
+				return """Unfortunately, EvalPrinter currently has some issues with OS X.
+Subscribe to the following issue to get notified about the fix: https://github.com/philippotto/Sublime-EvalPrinter/issues/1"""
 
 		if err or sp.returncode != 0:
 			return out + err
@@ -200,8 +208,9 @@ class Helper:
 	@staticmethod
 	def getCodeFilePath():
 
-		epPath = os.path.join(sublime.packages_path(), "EvalPrinter")
-		fileName = "tmp"
+		# epPath = os.path.join(sublime.packages_path(), "EvalPrinter")
+		epPath = sublime.packages_path()
+		fileName = "ep_tmp"
 		filePath = os.path.join(epPath, fileName)
 
 		return filePath
