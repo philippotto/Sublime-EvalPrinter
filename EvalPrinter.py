@@ -230,4 +230,7 @@ Subscribe to the following issue to get notified about the fix: https://github.c
 	@staticmethod
 	def formatTwoOutputs(a, b):
 
+		if "error" in a.lower():
+			a, b = b, a
+
 		return  a + "\n" + "-" * 80 + "\n\n" + b
