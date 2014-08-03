@@ -1,4 +1,4 @@
-language: python
+language: objective-c
 python:
     - "2.7"
 
