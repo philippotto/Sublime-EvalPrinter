@@ -5,16 +5,11 @@ from sys import platform as _platform
 
 class EvalPrintCommand(sublime_plugin.TextCommand):
 
-	def run(self, edit, entireFile=False):
+	def run(self, edit, codeStr=None):
 
 		view = self.view
 
-		if entireFile:
-			contentRegion = sublime.Region(0, self.view.size())
-			codeStr = self.view.substr(contentRegion)
-		else:
-			codeStr = Helper.getSelection(self.view)
-
+		codeStr = codeStr or Helper.getSelectedText(view)
 		syntax = view.settings().get('syntax')
 
 		if "Plain text" in syntax:
@@ -30,19 +25,47 @@ class EvalPrintEnterLiveSessionCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
-		toggledValue = not self.view.settings().get("isEvalPrinterLiveSession", False)
-		self.view.settings().set("isEvalPrinterLiveSession", toggledValue)
+		view = self.view
+		toggledValue = not view.settings().get("isEvalPrinterLiveSession", False)
+		view.settings().set("isEvalPrinterLiveSession", toggledValue)
 		sublime.status_message("EvalPrinter's Live Session is " + ("on" if toggledValue else "off"))
+
 		if toggledValue:
-			self.view.run_command("eval_print", dict(entireFile = True))
+			flags = 0
+			if len(Helper.getSelectedText(view)) == view.size():
+				# everything was selected, which is why we don't want to highlight the LiveSessionRegions
+				flags = sublime.HIDDEN
+				view.settings().set("EvalPrinterLiveSessionFullBuffer", True)
+
+			view.add_regions("EvalPrinterLiveSessionRegions", view.sel(), "string", flags=flags)
+			view.run_command("eval_print")
+		else:
+			view.erase_regions("EvalPrinterLiveSessionRegions")
+			view.settings().set("EvalPrinterLiveSessionFullBuffer", False)
 
 
 class ModifyListener(sublime_plugin.EventListener):
 
 	def on_modified_async(self, view):
 
-		if view.settings().get("isEvalPrinterLiveSession", False):
-			view.run_command("eval_print", dict(entireFile = True))
+		if not view.settings().get("isEvalPrinterLiveSession", False):
+			view.erase_regions("EvalPrinterLiveSessionRegions")
+			return
+
+		fullBuffer = view.settings().get("EvalPrinterLiveSessionFullBuffer", False)
+		if fullBuffer:
+			liveSessionRegions = [sublime.Region(0, view.size())]
+		else:
+			liveSessionRegions = view.get_regions("EvalPrinterLiveSessionRegions")
+
+
+		areRegionsNotEmpty = any(map(lambda r: r.size() > 0, liveSessionRegions))
+		if areRegionsNotEmpty:
+			codeStr = Helper.getSelectedText(view, liveSessionRegions)
+			view.run_command("eval_print", dict(codeStr = codeStr))
+		elif not fullBuffer:
+			# liveSessionRegions is an empty region; deactive LiveSessionMode
+			view.run_command("eval_print_enter_live_session")
 
 
 
@@ -118,11 +141,12 @@ class EvalEvaluator:
 class Helper:
 
 	@staticmethod
-	def getSelection(view):
+	def getSelectedText(view, regions=None):
 
+		regions = regions or view.sel()
 		codeParts = []
 
-		for region in view.sel():
+		for region in regions:
 
 			if region.a == region.b:
 				region = view.line(region)
