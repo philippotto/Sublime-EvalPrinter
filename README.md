@@ -32,8 +32,8 @@ Additional output can be achieved via the standard logging methods of the curren
 ![](http://philippotto.github.io/Sublime-EvalPrinter/screens/javascript.gif)
 
 
-Another possibility is to enter a "live session", in which the code of the active view will be transpiled/evaluated after each keystroke.
-The command is called ```eval_print_enter_live_session``` and the default keybinding is <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Enter</kbd>.
+Another possibility is to enter a "live session", in which the code will be transpiled/evaluated after each keystroke. The immediate feedback makes it especially useful for tweaking code until it's perfect.
+The command is called ```eval_print_enter_live_session``` and the default keybinding is <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Enter</kbd>. Invoke it again to exit the mode.
 
 
 ![](http://philippotto.github.io/Sublime-EvalPrinter/screens/javascript-live-session.gif)
