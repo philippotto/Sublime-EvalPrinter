@@ -1,7 +1,10 @@
 import sublime, sublime_plugin
 import subprocess
 import os
-from EvalPrinter.KillableCmd import KillableCmd
+try:
+	from EvalPrinter.KillableCmd import KillableCmd
+except:
+	from KillableCmd import KillableCmd
 
 class EvalPrintCommand(sublime_plugin.TextCommand):
 
