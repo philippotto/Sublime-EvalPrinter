@@ -1,5 +1,6 @@
 import sublime
 from unittest import TestCase
+import time
 
 version = sublime.version()
 
@@ -31,7 +32,7 @@ class TestMultiEditUtils(TestCase):
 
 		codeStr = "len('testPython')"
 		expectedValue = "10"
-
+		time.sleep(1000)
 		self.assertCode(codeStr, expectedValue, "Python")
 
 
@@ -48,6 +49,7 @@ class TestMultiEditUtils(TestCase):
 		codeStr = "Math.sqrt(6 + 3)"
 		expectedValue = "3"
 
+		time.sleep(1000)
 		self.assertCode(codeStr, expectedValue, "JavaScript")
 
 
