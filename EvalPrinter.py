@@ -1,7 +1,7 @@
 import sublime, sublime_plugin
 import subprocess
 import os
-from sys import platform as _platform
+from EvalPrinter.KillableCmd import KillableCmd
 
 class EvalPrintCommand(sublime_plugin.TextCommand):
 
@@ -13,12 +13,10 @@ class EvalPrintCommand(sublime_plugin.TextCommand):
 		syntax = view.settings().get('syntax')
 
 		if "Plain text" in syntax:
-			settings = sublime.load_settings("EvalPrinter.sublime-settings")
-			syntax = settings.get("default_language")
+			syntax = Helper.getSetting("default_language")
 
 		output = EvalEvaluator.evalPrint(codeStr, syntax)
 		Helper.showResult(output)
-
 
 
 class EvalPrintEnterLiveSessionCommand(sublime_plugin.TextCommand):
@@ -180,30 +178,8 @@ class Helper:
 	@staticmethod
 	def executeCommand(cmd, shell=True):
 
-		startupinfo = None
-		if sublime.platform() == "windows":
-			startupinfo = subprocess.STARTUPINFO()
-			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-		try:
-			sp = subprocess.Popen(cmd,
-				startupinfo=startupinfo,
-				stderr=subprocess.PIPE,
-				stdout=subprocess.PIPE,
-				shell=shell,
-				env=os.environ.copy())
-
-			out, err = map(lambda x: x.decode("ascii").replace("\r", ""), sp.communicate())
-
-		except:
-			if _platform == "darwin":
-				return """Unfortunately, EvalPrinter currently has some issues with OS X.
-Subscribe to the following issue to get notified about the fix: https://github.com/philippotto/Sublime-EvalPrinter/issues/1"""
-
-		if err or sp.returncode != 0:
-			return out + err
-
-		return out
+		timeoutLimit = Helper.getSetting("execution_timeout")
+		return KillableCmd(cmd, timeoutLimit, shell).Run()
 
 
 	@staticmethod
@@ -258,3 +234,9 @@ Subscribe to the following issue to get notified about the fix: https://github.c
 			a, b = b, a
 
 		return  a + "\n" + "-" * 80 + "\n\n" + b
+
+	@staticmethod
+	def getSetting(attr):
+
+		settings = sublime.load_settings("EvalPrinter.sublime-settings")
+		return settings.get(attr)
