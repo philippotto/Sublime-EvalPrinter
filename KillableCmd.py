@@ -22,6 +22,8 @@ class KillableCmd(threading.Thread):
 			startupinfo = subprocess.STARTUPINFO()
 			startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
+		out, err = "", ""
+
 		try:
 			self.p = subprocess.Popen(self.cmd,
 				startupinfo=startupinfo,
@@ -30,14 +32,15 @@ class KillableCmd(threading.Thread):
 				shell=self.shell,
 				env=os.environ.copy())
 
-
 			out, err = map(lambda x: x.decode("ascii").replace("\r", ""), self.p.communicate())
 
-		except:
+		except Exception as tryException:
 			if _platform == "darwin":
 				self.returnValue = """Unfortunately, EvalPrinter currently has some issues with OS X.
 Subscribe to the following issue to get notified about the fix: https://github.com/philippotto/Sublime-EvalPrinter/issues/1"""
 				return
+
+			print("An error occured while opening a subprocess", tryException)
 
 		if err or self.p.returncode != 0:
 			self.returnValue = out + err
