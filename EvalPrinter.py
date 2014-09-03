@@ -38,8 +38,9 @@ class EvalPrintEnterLiveSessionCommand(sublime_plugin.TextCommand):
 				flags = sublime.HIDDEN
 				view.settings().set("EvalPrinterLiveSessionFullBuffer", True)
 
-			view.add_regions("EvalPrinterLiveSessionRegions", view.sel(), "string", flags=flags)
+			view.add_regions("EvalPrinterLiveSessionRegions", Helper.getExpandedRegions(view), "string", flags=flags)
 			view.run_command("eval_print")
+
 		else:
 			view.erase_regions("EvalPrinterLiveSessionRegions")
 			view.settings().set("EvalPrinterLiveSessionFullBuffer", False)
@@ -144,18 +145,24 @@ class Helper:
 	@staticmethod
 	def getSelectedText(view, regions=None):
 
+		fullRegions = Helper.getExpandedRegions(view, regions)
+		return "\n".join([view.substr(region) for region in fullRegions])
+
+
+	@staticmethod
+	def getExpandedRegions(view, regions=None):
+
 		regions = regions or view.sel()
-		codeParts = []
+		fullRegions = []
 
 		for region in regions:
 
 			if region.a == region.b:
 				region = view.line(region)
 
-			code = view.substr(region)
-			codeParts.append(code)
+			fullRegions.append(region)
 
-		return "\n".join(codeParts)
+		return fullRegions
 
 
 	@staticmethod
