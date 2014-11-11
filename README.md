@@ -58,3 +58,7 @@ Feel free to open issues or submit pull requests to add support for other langua
 ## Installation
 
 Either use [Package Control](https://sublime.wbond.net/installation) and search for `EvalPrinter` or clone this repository into Sublime Text "Packages" directory.
+
+## License
+
+MIT © Philipp Otto 2014
